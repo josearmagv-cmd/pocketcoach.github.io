@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pocket Coach — Your Second Mind</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --sage: #4a6741;
+    --sage-light: #e8f0e6;
+    --sage-mid: #7a9e74;
+    --warm: #f5f0e8;
+    --warm-dark: #e0d8c8;
+    --ink: #1a1a18;
+    --ink-soft: #4a4a45;
+    --ink-muted: #8a8a82;
+    --surface: #fdfcf9;
+    --border: rgba(74,103,65,0.15);
+    --danger: #a32d2d;
+  }
+
+  html, body {
+    height: 100%;
+    font-family: 'DM Sans', sans-serif;
+    background: var(--surface);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  #app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    max-width: 700px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  /* HEADER */
+  #header {
+    padding: 1.1rem 1.5rem;
+    border-bottom: 0.5px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+
+  #logo-mark {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: var(--sage);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  #logo-mark svg {
+    width: 18px;
+    height: 18px;
+    stroke: white;
+    fill: none;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  #header-text h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 17px;
+    font-weight: 400;
+    color: var(--ink);
+    letter-spacing: 0.01em;
+  }
+
+  #header-text p {
+    font-size: 10.5px;
+    color: var(--ink-muted);
+    font-weight: 300;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  #status {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  #status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--sage-mid);
+    animation: pulse 3s ease-in-out infinite;
+  }
+
+  #status-text {
+    font-size: 11px;
+    color: var(--ink-muted);
+    font-weight: 300;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* API KEY SETUP */
+  #setup-screen {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    gap: 1.5rem;
+    text-align: center;
+  }
+
+  #setup-screen h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    font-weight: 400;
+    color: var(--ink);
+  }
+
+  #setup-screen p {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.7;
+    max-width: 420px;
+  }
+
+  #setup-screen a {
+    color: var(--sage);
+    text-decoration: underline;
+  }
+
+  #api-input-wrap {
+    width: 100%;
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  #api-key-input {
+    width: 100%;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    padding: 10px 14px;
+    border: 0.5px solid var(--warm-dark);
+    border-radius: 10px;
+    background: var(--warm);
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  #api-key-input:focus { border-color: var(--sage-mid); }
+  #api-key-input::placeholder { color: var(--ink-muted); }
+
+  #api-save-btn {
+    width: 100%;
+    padding: 11px;
+    background: var(--sage);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  #api-save-btn:hover { background: var(--sage-mid); }
+
+  #setup-note {
+    font-size: 11.5px;
+    color: var(--ink-muted);
+    max-width: 380px;
+    line-height: 1.6;
+  }
+
+  /* MESSAGES */
+  #chat-screen {
+    display: none;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  #messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    scroll-behavior: smooth;
+  }
+
+  #messages::-webkit-scrollbar { width: 3px; }
+  #messages::-webkit-scrollbar-track { background: transparent; }
+  #messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .msg {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    animation: fadeUp 0.3s ease;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .msg.coach { align-items: flex-start; }
+  .msg.user { align-items: flex-end; }
+
+  .msg-label {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    padding: 0 4px;
+  }
+
+  .bubble {
+    max-width: 85%;
+    padding: 0.9rem 1.15rem;
+    font-size: 14.5px;
+    line-height: 1.75;
+    font-weight: 400;
+  }
+
+  .coach .bubble {
+    background: var(--warm);
+    color: var(--ink);
+    border-radius: 4px 16px 16px 16px;
+    border: 0.5px solid var(--warm-dark);
+  }
+
+  .user .bubble {
+    background: var(--sage);
+    color: white;
+    border-radius: 16px 4px 16px 16px;
+  }
+
+  .typing-indicator {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    padding: 0.9rem 1.15rem;
+    background: var(--warm);
+    border: 0.5px solid var(--warm-dark);
+    border-radius: 4px 16px 16px 16px;
+    width: fit-content;
+  }
+
+  .typing-indicator span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--sage-mid);
+    animation: bounce 1.4s ease-in-out infinite;
+  }
+
+  .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+  .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes bounce {
+    0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+    40% { transform: translateY(-6px); opacity: 1; }
+  }
+
+  /* INPUT */
+  #input-area {
+    padding: 1rem 1.5rem 1.4rem;
+    border-top: 0.5px solid var(--border);
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+
+  #input-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+  }
+
+  #user-input {
+    flex: 1;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--ink);
+    background: var(--warm);
+    border: 0.5px solid var(--warm-dark);
+    border-radius: 22px;
+    padding: 10px 18px;
+    resize: none;
+    outline: none;
+    min-height: 44px;
+    max-height: 130px;
+    transition: border-color 0.2s;
+    overflow-y: auto;
+  }
+
+  #user-input:focus { border-color: var(--sage-mid); }
+  #user-input::placeholder { color: var(--ink-muted); }
+
+  #send-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--sage);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.2s, transform 0.1s;
+  }
+
+  #send-btn:hover { background: var(--sage-mid); }
+  #send-btn:active { transform: scale(0.94); }
+  #send-btn:disabled { background: var(--warm-dark); cursor: not-allowed; }
+
+  #send-btn svg {
+    width: 16px;
+    height: 16px;
+    stroke: white;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transform: translateX(1px);
+  }
+
+  #hint {
+    font-size: 11px;
+    color: var(--ink-muted);
+    text-align: center;
+    margin-top: 8px;
+    font-weight: 300;
+    letter-spacing: 0.01em;
+  }
+
+  #error-msg {
+    font-size: 12px;
+    color: var(--danger);
+    text-align: center;
+    padding: 6px;
+    display: none;
+    margin-top: 6px;
+  }
+
+  /* FOOTER */
+  #footer {
+    text-align: center;
+    padding: 0.5rem;
+    font-size: 10px;
+    color: var(--ink-muted);
+    font-weight: 300;
+    letter-spacing: 0.04em;
+    border-top: 0.5px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 480px) {
+    #messages { padding: 1rem; }
+    #input-area { padding: 0.75rem 1rem 1rem; }
+    .bubble { max-width: 92%; font-size: 14px; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div id="header">
+    <div id="logo-mark">
+      <svg viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="9"/>
+        <path d="M12 7v5l3 3"/>
+      </svg>
+    </div>
+    <div id="header-text">
+      <h1>Pocket Coach</h1>
+      <p>Your second mind</p>
+    </div>
+    <div id="status">
+      <div id="status-dot"></div>
+      <span id="status-text">present</span>
+    </div>
+  </div>
+
+  <!-- API KEY SETUP SCREEN -->
+  <div id="setup-screen">
+    <h2>One quick setup step</h2>
+    <p>Pocket Coach needs an Anthropic API key to power the AI. It's free to create — you only pay tiny amounts as you use it (a few cents per conversation).</p>
+    <p>
+      1. Go to <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a><br>
+      2. Create a free account<br>
+      3. Go to "API Keys" → "Create Key"<br>
+      4. Copy and paste it below
+    </p>
+    <div id="api-input-wrap">
+      <input type="password" id="api-key-input" placeholder="sk-ant-..." autocomplete="off" spellcheck="false"/>
+      <button id="api-save-btn">Start talking to your Coach</button>
+    </div>
+    <p id="setup-note">Your key is saved only in your browser — it never leaves your device and is never stored on any server.</p>
+  </div>
+
+  <!-- CHAT SCREEN -->
+  <div id="chat-screen">
+    <div id="messages"></div>
+    <div id="input-area">
+      <div id="input-row">
+        <textarea id="user-input" placeholder="Talk to your coach..." rows="1"></textarea>
+        <button id="send-btn" disabled>
+          <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+      <div id="error-msg"></div>
+      <div id="hint">This is a safe space. Say anything on your mind.</div>
+    </div>
+  </div>
+
+  <div id="footer">pocket coach &nbsp;·&nbsp; your second mind</div>
+
+</div>
+
+<script>
+const SYSTEM_PROMPT = `You are Pocket Coach — a calm, emotionally intelligent companion. You are the user's Second Mind: a presence that listens, helps untangle life's complexities, and gently encourages progress.
+
+CORE PHILOSOPHY:
+- You are not a productivity tool. You are a thinking companion.
+- The user is never the problem. Situations, expectations, or emotions may need adjusting — never the user's worth.
+- You help the user discover their own insights through reflection (Socratic approach). You do not tell them what to feel or think.
+- "Untie the knot": when something feels stuck, you help find the root, not just the surface problem.
+- Progress over pressure. Movement over perfection. Journey over destination.
+- The user has intrinsic worth regardless of productivity or achievement.
+- Help the user find and follow their purpose — not as pressure, but as a compass.
+
+YOUR VOICE:
+- Calm, grounded, warm but not sentimental
+- "We" language most of the time (we can figure this out together), "I" only in moments of genuine care (I'm glad you shared that)
+- Never preachy, never commanding, never motivational-poster language
+- Occasionally light and human — a gentle observation — but mostly steady and neutral
+- Short to medium responses. Never overwhelm with text.
+- No bullet points. Speak in natural, flowing human sentences.
+- Never use hollow filler phrases like "Absolutely!", "Great question!", "Of course!"
+
+CONVERSATION APPROACH:
+1. Listen first. Don't jump to solutions.
+2. Ask ONE clarifying question at most per message. Never multiple questions at once.
+3. Offer a thoughtful observation or insight — don't just interrogate.
+4. Help the user name their own emotion — never name it for them before they do.
+5. Follow this inner loop: Situation → Goal → Emotion → Insight → (optional) small step
+6. When a user expresses self-judgment ("I wasted the day", "I failed"), do NOT validate the negative label. Redirect toward understanding. Example: user says "I wasted the whole day" — don't say "that happens" — instead ask "what was pulling your energy today?"
+7. Never ask more than one question per message.
+8. Sometimes the most powerful response is a warm observation — not a question.
+9. When appropriate, help the user reconnect with their purpose: "does this direction still feel right to you?"
+
+NEVER DO:
+- Say "I understand how you feel" before the user names their feeling
+- Validate negative self-labels ("yes, that happens", "that's normal", "days like that happen")
+- Push for action when the user needs space
+- Repeat what the user said back robotically
+- Sound like a therapist or life coach cliché
+- Use motivational phrases ("you've got this!", "keep pushing!", "believe in yourself!")
+- Ask more than one question at a time
+
+SAFE SPACE:
+- If the user expresses serious distress or crisis — acknowledge gently and encourage professional support.
+- Never judge. Never shame. Never pressure.
+- The user's value is never tied to productivity or achievement.
+
+ONBOARDING (first conversation):
+Start with a warm, brief, confident opening. Let the user know this is their space. Invite them to share where they are in life right now. Then gradually discover their goals and what matters through natural conversation — not a questionnaire. Keep it light, human, and unhurried.`;
+
+let apiKey = localStorage.getItem('pc_api_key') || '';
+let conversationHistory = [];
+let isLoading = false;
+
+const setupScreen = document.getElementById('setup-screen');
+const chatScreen = document.getElementById('chat-screen');
+const apiKeyInput = document.getElementById('api-key-input');
+const apiSaveBtn = document.getElementById('api-save-btn');
+const messagesEl = document.getElementById('messages');
+const inputEl = document.getElementById('user-input');
+const sendBtn = document.getElementById('send-btn');
+const errorEl = document.getElementById('error-msg');
+
+function showError(msg) {
+  errorEl.textContent = msg;
+  errorEl.style.display = 'block';
+  setTimeout(() => { errorEl.style.display = 'none'; }, 5000);
+}
+
+function addMessage(role, text) {
+  const div = document.createElement('div');
+  div.className = `msg ${role === 'assistant' ? 'coach' : 'user'}`;
+  const label = document.createElement('div');
+  label.className = 'msg-label';
+  label.textContent = role === 'assistant' ? 'Coach' : 'You';
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  bubble.textContent = text;
+  div.appendChild(label);
+  div.appendChild(bubble);
+  messagesEl.appendChild(div);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function showTyping() {
+  const div = document.createElement('div');
+  div.className = 'msg coach';
+  div.id = 'typing';
+  const label = document.createElement('div');
+  label.className = 'msg-label';
+  label.textContent = 'Coach';
+  const ind = document.createElement('div');
+  ind.className = 'typing-indicator';
+  ind.innerHTML = '<span></span><span></span><span></span>';
+  div.appendChild(label);
+  div.appendChild(ind);
+  messagesEl.appendChild(div);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function removeTyping() {
+  const t = document.getElementById('typing');
+  if (t) t.remove();
+}
+
+async function callAPI(messages) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      system: SYSTEM_PROMPT,
+      messages: messages
+    })
+  });
+  return res.json();
+}
+
+async function startConversation() {
+  isLoading = true;
+  sendBtn.disabled = true;
+  showTyping();
+
+  try {
+    const data = await callAPI([{
+      role: 'user',
+      content: 'Begin the first conversation. This is the very first time the user opens Pocket Coach. Give your opening message — warm, calm, confident. Let them know this is their space. Invite them to share where they are in life right now. Keep it brief and human. No bullet points.'
+    }]);
+
+    removeTyping();
+
+    if (data.error) {
+      showError('Could not connect. Please check your API key.');
+      setupScreen.style.display = 'flex';
+      chatScreen.style.display = 'none';
+      return;
+    }
+
+    const reply = data.content[0].text;
+    conversationHistory.push({ role: 'assistant', content: reply });
+    addMessage('assistant', reply);
+  } catch (e) {
+    removeTyping();
+    const fallback = 'This is a place where you can think freely about your life.\n\nI\'m here to walk with you — to help untangle what feels complicated, explore ideas, and move toward the direction you want to build.\n\nTo begin, tell me a little about where you are in life right now.';
+    conversationHistory.push({ role: 'assistant', content: fallback });
+    addMessage('assistant', fallback);
+  }
+
+  isLoading = false;
+  sendBtn.disabled = false;
+  inputEl.focus();
+}
+
+async function sendMessage() {
+  const text = inputEl.value.trim();
+  if (!text || isLoading) return;
+
+  inputEl.value = '';
+  inputEl.style.height = 'auto';
+  isLoading = true;
+  sendBtn.disabled = true;
+
+  addMessage('user', text);
+  conversationHistory.push({ role: 'user', content: text });
+
+  showTyping();
+
+  try {
+    const data = await callAPI(conversationHistory);
+    removeTyping();
+
+    if (data.error) {
+      showError('Something went wrong. Please try again.');
+      conversationHistory.pop();
+    } else {
+      const reply = data.content[0].text;
+      conversationHistory.push({ role: 'assistant', content: reply });
+      addMessage('assistant', reply);
+    }
+  } catch (e) {
+    removeTyping();
+    showError('Connection issue. Please try again.');
+    conversationHistory.pop();
+  }
+
+  isLoading = false;
+  sendBtn.disabled = false;
+  inputEl.focus();
+}
+
+function initChat() {
+  setupScreen.style.display = 'none';
+  chatScreen.style.display = 'flex';
+  startConversation();
+}
+
+apiSaveBtn.addEventListener('click', () => {
+  const key = apiKeyInput.value.trim();
+  if (!key.startsWith('sk-ant-')) {
+    showError('That doesn\'t look like a valid API key. It should start with sk-ant-');
+    errorEl.style.display = 'block';
+    return;
+  }
+  apiKey = key;
+  localStorage.setItem('pc_api_key', key);
+  initChat();
+});
+
+apiKeyInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') apiSaveBtn.click();
+});
+
+sendBtn.addEventListener('click', sendMessage);
+
+inputEl.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+});
+
+inputEl.addEventListener('input', () => {
+  inputEl.style.height = 'auto';
+  inputEl.style.height = Math.min(inputEl.scrollHeight, 130) + 'px';
+});
+
+if (apiKey && apiKey.startsWith('sk-ant-')) {
+  initChat();
+} else {
+  setupScreen.style.display = 'flex';
+  chatScreen.style.display = 'none';
+}
+</script>
+</body>
+</html>
